@@ -33,19 +33,17 @@ RUN LATEST_COMPOSE=$(curl -s https://api.github.com/repos/docker/compose/release
 RUN ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf || echo "Skipping /etc/resolv.conf setup"
 
 # 5. Create the SSH‐agent entrypoint script
-RUN cat << 'EOF' > /usr/local/bin/entrypoint.sh
-#!/usr/bin/env sh
-set -e
-
-# Start ssh-agent and export environment vars
-eval "$(ssh-agent -s)"
-
-# (Optional) Add your private key — remove the '|| true' if you want it to fail if missing
-ssh-add /root/.ssh/id_rsa || true
-
-# Hand off to the original init (linuxserver uses /init under the hood)
-exec /init "$@"
-EOF
+RUN echo '#!/usr/bin/env sh' > /usr/local/bin/entrypoint.sh \
+    && echo 'set -e' >> /usr/local/bin/entrypoint.sh \
+    && echo '' >> /usr/local/bin/entrypoint.sh \
+    && echo '# Start ssh-agent and export environment vars' >> /usr/local/bin/entrypoint.sh \
+    && echo 'eval "$(ssh-agent -s)"' >> /usr/local/bin/entrypoint.sh \
+    && echo '' >> /usr/local/bin/entrypoint.sh \
+    && echo '# (Optional) Add your private key — remove the || true if you want it to fail if missing' >> /usr/local/bin/entrypoint.sh \
+    && echo 'ssh-add /root/.ssh/id_rsa || true' >> /usr/local/bin/entrypoint.sh \
+    && echo '' >> /usr/local/bin/entrypoint.sh \
+    && echo '# Hand off to the original init (linuxserver uses /init under the hood)' >> /usr/local/bin/entrypoint.sh \
+    && echo 'exec /init "$@"' >> /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
